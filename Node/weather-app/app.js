@@ -5,7 +5,9 @@ const chalk = require('chalk');
 
 const location = process.argv[4];
 
-if (location) {
+if (!location) {
+    return console.log('Niste naveli mjesto');
+} else {
     geocode(location, (error, response) => {
         if (error) {
             return console.log(error);
@@ -18,6 +20,4 @@ if (location) {
             console.log(chalk.yellow(data));
         });
     });
-} else {
-    return console.log('Niste naveli mjesto');
 }

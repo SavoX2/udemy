@@ -1,6 +1,8 @@
 const path = require('path');
 const express = require('express');
 const hbs = require('hbs');
+const geocode = require('./utils/geocode');
+const forecast = require('./utils/forecast');
 
 const app = express();
 const publicDir = path.join(__dirname, '..', 'public');
@@ -16,9 +18,42 @@ hbs.registerPartials(partialsDir);
 app.use(express.static(publicDir));
 
 app.get('/weather', (req, res) => {
+    if(!req.query.address) {
+        return res.send({
+            error: 'Address must be provided'
+        });
+    }
+
+    geocode(req.query.address, (error, { latitude, longitude, location } = {}) => {
+        if (error) {
+            return res.send({
+                error
+            });
+        }
+        forecast(latitude, longitude, (error, data) => {
+            if (error) {
+                return res.send({
+                    error
+                });
+            }
+            res.send({
+                forecast: data,
+                location,
+                address: req.query.address,
+            });
+            
+        });
+    });
+});
+
+app.get('/products', (req, res) => {
+    if(!req.query.search) {
+        return res.send({
+            error: 'You must provide a search term'
+        });
+    }
     res.send({
-        forecast: 'Suncano',
-        location: 'Banja Luka',
+        products: []
     });
 });
 
@@ -41,6 +76,22 @@ app.get('/help', (req, res) => {
         message: 'You is fucked',
         title: 'Help', 
         name: 'Savo Debeljak'
+    });
+});
+
+app.get('/help/*', (req, res) => {
+    res.render('404', {
+        title: '404', 
+        name: 'Debeljak Savo', 
+        errorMessage: 'Help article not found'
+    });
+});
+
+app.get('*', (req, res) => {
+    res.render('404', {
+        title: '404', 
+        name: 'Debeljak Savo', 
+        errorMessage: 'Page not found'
     });
 });
 
